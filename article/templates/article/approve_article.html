@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approve Article</title>
+</head>
+<body>
+    <table>
+        <tr>
+            <td>Article title</td>
+            <td>Action</td>
+        </tr>
+        {% for article in articles %}
+            <tr>
+                <td>article.title</td>
+                <td>
+                    <form action="/article-approval/{{article.id}}/" method="PATCH">
+                        {% csrf_token %}
+                        <input type="text" hidden value="Approved" name="status"/>
+                        <button type="submit">Approve</button>
+                    </form>
+                    <form action="/article-approval/{{article.id}}/" method="PATCH">
+                        {% csrf_token %}
+                        <input type="text" hidden value="Rejected" name="status"/>
+                        <button type="submit">Reject</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

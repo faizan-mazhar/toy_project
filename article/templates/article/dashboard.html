@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <table>
+        <th>
+            <td>Name</td>
+            <td>Total Articles Written</td>
+            <td>Total Articles Written Last 30 days</td>
+        </th>
+        {% for writer in writers %}
+        <tr>
+            <td>writer.name</td>
+            <td>writer.total_article</td>
+            <td>writer.articles_last_30_days</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
