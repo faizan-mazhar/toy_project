@@ -1,10 +1,7 @@
 from datetime import timedelta
 from django.utils import timezone
 from django.urls import reverse
-from project.test_base import (
-    TestBase,
-    ArticleFactory
-)
+from project.test_base import TestBase, ArticleFactory
 from article.models import Article, ArticleStatus
 
 
@@ -33,14 +30,8 @@ class DashboardTest(TestBase):
 
         # writer article map
         writer_article_map = {
-            writer.name: {
-                "total_article": 6,
-                "articles_last_30_days": 4
-            },
-            writer_2.name: {
-                "total_article": 2,
-                "articles_last_30_days": 2
-            }
+            writer.name: {"total_article": 6, "articles_last_30_days": 4},
+            writer_2.name: {"total_article": 2, "articles_last_30_days": 2},
         }
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
@@ -51,8 +42,10 @@ class DashboardTest(TestBase):
             expected_article = writer_article_map[writer["name"]]
             self.assertEqual(expected_article["total_article"],
                              writer["total_article"])
-            self.assertEqual(expected_article["articles_last_30_days"],
-                             writer["articles_last_30_days"])
+            self.assertEqual(
+                expected_article["articles_last_30_days"],
+                writer["articles_last_30_days"],
+            )
 
 
 class CreateArticleTest(TestBase):
@@ -64,10 +57,7 @@ class CreateArticleTest(TestBase):
 
     def test_article_creation(self):
         title = "Testing article creation"
-        data = {
-            "title": title,
-            "content": "testing content"
-        }
+        data = {"title": title, "content": "testing content"}
 
         response = self.client.post(self.url, data=data)
         self.assertEqual(response.status_code, 302)
@@ -81,10 +71,13 @@ class CreateArticleTest(TestBase):
         response = self.client.post(self.url, data=data)
         self.assertEqual(response.status_code, 200)
         form = response.context["form"]
-        self.assertEqual(form.errors, 
-                         {"title": ["This field is required."],
-                          "content": ["This field is required."]
-                          })
+        self.assertEqual(
+            form.errors,
+            {
+                "title": ["This field is required."],
+                "content": ["This field is required."],
+            },
+        )
 
 
 class UpdateArticleTest(TestBase):
@@ -92,11 +85,11 @@ class UpdateArticleTest(TestBase):
     def setUp(self) -> None:
         super().setUp()
         self.writer = self.get_writer(authenticate=True)
-        self.article = ArticleFactory(written_by=self.writer,
-                                      title="Old title",
-                                      content="old content")
-        self.url = reverse('article-detail',
-                           kwargs={'article_id': self.article.id})
+        self.article = ArticleFactory(
+            written_by=self.writer, title="Old title", content="old content"
+        )
+        self.url = reverse("article-detail",
+                           kwargs={"article_id": self.article.id})
 
     def test_updating_article_content(self):
         title = "Updated title"
@@ -120,7 +113,7 @@ class UpdateArticleTest(TestBase):
         data = {
             "title": self.article.title,
             "content": self.article.content,
-            "status": ArticleStatus.approved
+            "status": ArticleStatus.approved,
         }
 
         response = self.client.post(self.url, data=data)
@@ -138,36 +131,38 @@ class ArticleApprovalTest(TestBase):
         self.writer = self.get_writer()
 
     def test_get_article_view(self):
-        ArticleFactory.create_batch(3,
-                                    written_by=self.writer,
-                                    status=ArticleStatus.approved)
-        ArticleFactory.create_batch(2,
-                                    written_by=self.writer,
-                                    status=ArticleStatus.rejected)
-        pending_articles = ArticleFactory.create_batch(4,
-                                                       written_by=self.writer,
-                                                       status=ArticleStatus.pending_review)
+        ArticleFactory.create_batch(
+            3, written_by=self.writer, status=ArticleStatus.approved
+        )
+        ArticleFactory.create_batch(
+            2, written_by=self.writer, status=ArticleStatus.rejected
+        )
+        pending_articles = ArticleFactory.create_batch(
+            4, written_by=self.writer, status=ArticleStatus.pending_review
+        )
 
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, 200)
         articles = response.context["articles"]
         self.assertEqual(len(articles), 4)
-        self.assertListEqual([article.id for article in articles],
-                             [article.id for article in pending_articles])
+        self.assertListEqual(
+            [article.id for article in articles],
+            [article.id for article in pending_articles],
+        )
 
     def test_update_article_view(self):
         article = ArticleFactory.create(written_by=self.writer)
         url = reverse("article-approval", kwargs={"article_id": article.id})
-        data = {
-            "status": ArticleStatus.approved
-        }
+        data = {"status": ArticleStatus.approved}
 
         # verify there is no approved article
         self.assertEqual(
-            Article.objects.filter(status=ArticleStatus.approved).count(), 0)
+            Article.objects.filter(status=ArticleStatus.approved).count(), 0
+        )
         self.assertEqual(
-            Article.objects.filter(edited_by=self.editor).count(), 0)
+            Article.objects.filter(edited_by=self.editor).count(), 0
+            )
 
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, 302)
@@ -194,14 +189,14 @@ class ArticleEditHistoryTest(TestBase):
         editor_2 = self.get_editor()
 
         # First editor articles
-        first_editor_articles = ArticleFactory.create_batch(2,
-                                                            written_by=self.writer,
-                                                            edited_by=self.editor)
+        first_editor_articles = ArticleFactory.create_batch(
+            2, written_by=self.writer, edited_by=self.editor
+        )
 
         # Second editor article
-        second_editor_articles = ArticleFactory.create_batch(3,
-                                                             written_by=self.writer,
-                                                             edited_by=editor_2)
+        second_editor_articles = ArticleFactory.create_batch(
+            3, written_by=self.writer, edited_by=editor_2
+        )
 
         # Response should only contain articles for the first editor
         response = self.client.get(self.url)
@@ -211,8 +206,12 @@ class ArticleEditHistoryTest(TestBase):
         editor_articles = response.context["articles"]
 
         self.assertEqual(len(editor_articles), 2)
-        expected_article_ids = [article.id for article in first_editor_articles]
-        not_expected_article_ids = [article.id for article in second_editor_articles]
+        expected_article_ids = [
+            article.id for article in first_editor_articles
+            ]
+        not_expected_article_ids = [
+            article.id for article in second_editor_articles
+            ]
         response_article_ids = [article.id for article in editor_articles]
         self.assertListEqual(expected_article_ids, response_article_ids)
         self.assertNotEqual(not_expected_article_ids, response_article_ids)
